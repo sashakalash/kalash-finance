@@ -14,6 +14,7 @@ export default [
       '**/dist/**',
       '**/build/**',
       '**/.vercel/**',
+      'supabase/functions/**',
       '**/coverage/**',
     ],
   },
