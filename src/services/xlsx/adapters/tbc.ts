@@ -103,8 +103,8 @@ function parseDetails(details: string): {
 }
 
 export const tbcAdapter: BankAdapter = {
-  id: 'tbc',
-  name: 'TBC Bank',
+  id: 'bog',
+  name: 'BoG',
   fileExtension: 'xlsx',
 
   detect: (headers) =>
