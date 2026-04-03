@@ -102,7 +102,7 @@ function parseDetails(details: string): {
   };
 }
 
-export const tbcAdapter: BankAdapter = {
+export const gelAdapter: BankAdapter = {
   id: 'bog',
   name: 'BoG',
   fileExtension: 'xlsx',

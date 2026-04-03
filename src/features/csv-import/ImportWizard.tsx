@@ -124,7 +124,7 @@ export function ImportWizard({ userId, categories }: ImportWizardProps): React.R
     try {
       const res = await importTransactions({
         filename,
-        bank_format: 'tbc',
+        bank_format: 'bog',
         transactions: selected.map((r) => ({
           amount: r.amount,
           currency: r.currency,

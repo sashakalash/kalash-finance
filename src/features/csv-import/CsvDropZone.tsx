@@ -68,7 +68,7 @@ export function CsvDropZone({ onFile, loading }: CsvDropZoneProps): React.ReactE
         <p className="text-sm font-medium">
           {dragging ? 'Drop it!' : 'Drag & drop your bank statement'}
         </p>
-        <p className="text-xs text-muted-foreground">TBC Bank · .xlsx / .xls · max 10 MB</p>
+        <p className="text-xs text-muted-foreground">BoG Bank · .xlsx / .xls · max 10 MB</p>
       </div>
 
       <Button

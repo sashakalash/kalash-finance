@@ -26,7 +26,7 @@ export default async function ImportPage(): Promise<React.ReactElement> {
       <div>
         <h1 className="text-2xl font-bold">Import</h1>
         <p className="text-sm text-muted-foreground">
-          Upload your TBC Bank statement (.xlsx) to import transactions.
+          Upload your BoG Bank statement (.xlsx) to import transactions.
         </p>
       </div>
 
