@@ -48,7 +48,7 @@ export function ImportWizard({ userId, categories }: ImportWizardProps): React.R
       const adapter = detectAdapter(headers);
 
       if (!adapter) {
-        toast.error('Bank format not recognized. Currently supported: TBC Bank');
+        toast.error('Bank format not recognized');
         return;
       }
 

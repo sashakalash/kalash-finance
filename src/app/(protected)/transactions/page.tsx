@@ -1,16 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -19,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TransactionForm } from '@/features/transactions/TransactionForm';
+import { AddTransactionDialog } from '@/features/transactions/AddTransactionDialog';
 import { DeleteTransactionButton } from '@/features/transactions/DeleteTransactionButton';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { Category, Transaction } from '@/types';
@@ -51,18 +42,7 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transactions</h1>
-        <Dialog>
-          <DialogTrigger render={<Button size="sm" />}>
-            <Plus size={14} className="mr-1" />
-            Add
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>New transaction</DialogTitle>
-            </DialogHeader>
-            <TransactionForm categories={categories} />
-          </DialogContent>
-        </Dialog>
+        <AddTransactionDialog categories={categories} />
       </div>
 
       <div className="rounded-lg border">

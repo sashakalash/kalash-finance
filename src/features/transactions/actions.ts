@@ -104,7 +104,13 @@ export async function importTransactions(
     );
 
   const existingHashes = new Set((existing ?? []).map((r) => r.hash));
-  const toInsert = transactions.filter((t) => !existingHashes.has(t.hash));
+  // Deduplicate within the incoming batch itself before checking against DB
+  const seenHashes = new Set<string>();
+  const toInsert = transactions.filter((t) => {
+    if (existingHashes.has(t.hash) || seenHashes.has(t.hash)) return false;
+    seenHashes.add(t.hash);
+    return true;
+  });
   const duplicates = transactions.length - toInsert.length;
 
   if (toInsert.length > 0) {

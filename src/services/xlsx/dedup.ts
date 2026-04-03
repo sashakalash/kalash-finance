@@ -13,6 +13,7 @@ export async function generateHash(userId: string, tx: RawTransaction): Promise<
     tx.currency.toUpperCase(),
     tx.type,
     tx.description.toLowerCase().trim(),
+    (tx.rawDetails ?? '').trim(),
   ].join('|');
 
   const encoder = new TextEncoder();

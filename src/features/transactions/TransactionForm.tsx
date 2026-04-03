@@ -139,7 +139,18 @@ export function TransactionForm({
         </label>
         <Select value={form.category_id} onValueChange={(v) => set('category_id', v ?? '')}>
           <SelectTrigger id="tx-category">
-            <SelectValue placeholder="Select category" />
+            {(() => {
+              const cat = form.category_id
+                ? categories.find((c) => c.id === form.category_id)
+                : null;
+              return cat ? (
+                <span className="flex flex-1 text-left text-sm">
+                  {cat.icon} {cat.name}
+                </span>
+              ) : (
+                <SelectValue placeholder="Select category" />
+              );
+            })()}
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">Uncategorized</SelectItem>

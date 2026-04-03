@@ -103,7 +103,18 @@ export function ImportPreviewTable({
                     onValueChange={(v) => onCategoryChange(i, v ?? '')}
                   >
                     <SelectTrigger className="h-7 w-36 text-xs">
-                      <SelectValue placeholder="Category" />
+                      {(() => {
+                        const cat = row.suggestedCategory
+                          ? categories.find((c) => c.name === row.suggestedCategory)
+                          : null;
+                        return cat ? (
+                          <span className="flex flex-1 text-left text-xs">
+                            {cat.icon} {cat.name}
+                          </span>
+                        ) : (
+                          <SelectValue placeholder="Category" />
+                        );
+                      })()}
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">Uncategorized</SelectItem>

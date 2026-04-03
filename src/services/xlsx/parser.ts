@@ -8,7 +8,8 @@ export async function parseXlsxFile(file: File): Promise<Record<string, string>[
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array', cellDates: true, cellText: false });
 
-  const sheetName = workbook.SheetNames[0];
+  const sheetName =
+    workbook.SheetNames.find((n) => n.toLowerCase() === 'transactions') ?? workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
 
   // raw: true keeps numbers as numbers; defval: '' avoids undefined cells
