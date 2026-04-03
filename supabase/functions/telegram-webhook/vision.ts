@@ -44,7 +44,12 @@ export async function parseReceipt(
     ],
   });
 
-  const text = message.content[0].type === 'text' ? message.content[0].text : '';
+  const raw = message.content[0].type === 'text' ? message.content[0].text : '';
+  // Strip markdown code fences if Claude wraps the response (```json ... ```)
+  const text = raw
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
 
   try {
     const parsed = JSON.parse(text) as Partial<ReceiptData>;
