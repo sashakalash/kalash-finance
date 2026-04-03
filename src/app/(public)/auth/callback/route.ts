@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  // Strip Next.js route group prefixes like /(protected)/ that cause 404s
   const rawNext = searchParams.get('next') ?? '/dashboard';
   const next = rawNext.replace(/^\/\([^)]+\)/, '');
 
