@@ -23,7 +23,7 @@ function parseAmount(raw: string | number | undefined): number | null {
   return isNaN(value) ? null : value;
 }
 
-function parseTbcDate(str: string): string {
+function parseGelDate(str: string): string {
   // "31/12/2025" or "31/12/2025 14:32" → "2025-12-31"
   const datePart = str.trim().split(' ')[0];
   const [day, month, year] = datePart.split('/');
@@ -42,7 +42,7 @@ function parseDetails(details: string): {
   if (cardPayment) {
     const merchant = cardPayment[1].split(',')[0].trim();
     const mcc = cardPayment[2];
-    const date = parseTbcDate(cardPayment[3]);
+    const date = parseGelDate(cardPayment[3]);
     return {
       description: merchant,
       date,
@@ -122,7 +122,7 @@ export const gelAdapter: BankAdapter = {
     const amount = parseAmount(rawGel);
     if (amount === null) return null;
 
-    const rowDate = parseTbcDate(String(row.Date));
+    const rowDate = parseGelDate(String(row.Date));
     const { description, date, suggestedCategory } = parseDetails(details);
 
     // Determine currency: use non-empty foreign currency column if GEL is ~0

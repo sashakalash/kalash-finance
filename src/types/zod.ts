@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const TransactionTypeSchema = z.enum(['expense', 'income']);
 export const TransactionSourceSchema = z.enum(['csv', 'telegram', 'manual']);
-export const BankFormatSchema = z.enum(['tbc', 'bog', 'custom']);
+export const BankFormatSchema = z.enum(['bog', 'custom']);
 
 export const CreateTransactionSchema = z.object({
   amount: z.number().positive('Amount must be positive'),

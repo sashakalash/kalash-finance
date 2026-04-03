@@ -1,7 +1,7 @@
 export type TransactionType = 'expense' | 'income';
 export type TransactionSource = 'csv' | 'telegram' | 'manual';
 export type CsvImportStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type BankFormat = 'tbc' | 'bog' | 'custom';
+export type BankFormat = 'bog' | 'custom';
 
 export interface Category {
   id: string;
