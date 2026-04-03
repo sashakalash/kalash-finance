@@ -15,7 +15,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps): R
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-medium">Recent transactions</CardTitle>
         <Link
-          href="/(protected)/transactions"
+          href="/transactions"
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           View all <ArrowRight size={12} />

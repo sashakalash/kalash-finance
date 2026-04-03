@@ -6,10 +6,10 @@ import { BarChart3, CreditCard, Upload, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
-  { href: '/(protected)/dashboard', label: 'Dashboard', icon: BarChart3 },
-  { href: '/(protected)/transactions', label: 'Transactions', icon: CreditCard },
-  { href: '/(protected)/import', label: 'Import', icon: Upload },
-  { href: '/(protected)/settings', label: 'Settings', icon: Settings },
+  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { href: '/transactions', label: 'Transactions', icon: CreditCard },
+  { href: '/import', label: 'Import', icon: Upload },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function MobileNav(): React.ReactElement {

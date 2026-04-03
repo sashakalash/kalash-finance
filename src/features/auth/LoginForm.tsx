@@ -34,7 +34,7 @@ export function LoginForm(): React.ReactElement {
       if (error) {
         toast.error(error.message);
       } else {
-        router.push('/(protected)/dashboard');
+        router.push('/dashboard');
         router.refresh();
       }
     }
