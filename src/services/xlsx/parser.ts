@@ -1,16 +1,26 @@
 import * as XLSX from 'xlsx';
 
+/** Returns all sheet names in the workbook without fully parsing. */
+export async function listXlsxSheets(file: File): Promise<string[]> {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: 'array', bookSheets: true });
+  return workbook.SheetNames;
+}
+
 /**
- * Parse an XLSX/XLS file in the browser and return rows as key-value objects.
- * Column headers come from the first non-empty row.
+ * Parse one sheet of an XLSX/XLS file and return rows as key-value objects.
+ * If sheetName is omitted, uses the first sheet.
  */
-export async function parseXlsxFile(file: File): Promise<Record<string, string>[]> {
+export async function parseXlsxFile(
+  file: File,
+  sheetName?: string,
+): Promise<Record<string, string>[]> {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array', cellDates: true, cellText: false });
 
-  const sheetName =
-    workbook.SheetNames.find((n) => n.toLowerCase() === 'transactions') ?? workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
+  const name = sheetName ?? workbook.SheetNames[0];
+  const sheet = workbook.Sheets[name];
+  if (!sheet) return [];
 
   // raw: true keeps numbers as numbers; defval: '' avoids undefined cells
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {

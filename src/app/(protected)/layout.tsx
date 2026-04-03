@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import NextTopLoader from 'nextjs-toploader';
+import { TopLoader } from '@/components/layout/TopLoader';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -18,7 +18,7 @@ export default async function ProtectedLayout({
 
   return (
     <>
-      <NextTopLoader color="var(--primary)" showSpinner={false} />
+      <TopLoader />
       <div className="flex h-screen overflow-hidden">
         {/* Desktop sidebar */}
         <div className="hidden md:flex">

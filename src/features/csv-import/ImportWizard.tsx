@@ -8,7 +8,7 @@ import { CsvDropZone } from './CsvDropZone';
 import { ImportPreviewTable } from './ImportPreviewTable';
 import { fetchExistingHashes } from './actions';
 import { importTransactions } from '@/features/transactions/actions';
-import { parseXlsxFile } from '@/services/xlsx/parser';
+import { listXlsxSheets, parseXlsxFile } from '@/services/xlsx/parser';
 import { detectAdapter } from '@/services/xlsx/adapters';
 import { generateHash } from '@/services/xlsx/dedup';
 import type { Category, PreviewTransaction } from '@/types';
@@ -37,18 +37,29 @@ export function ImportWizard({ userId, categories }: ImportWizardProps): React.R
     setLoading(true);
     try {
       setFilename(file.name);
-      const rawRows = await parseXlsxFile(file);
 
-      if (rawRows.length === 0) {
-        toast.error('File is empty or could not be parsed');
-        return;
+      // Try each sheet until we find one the adapter can handle
+      const sheetNames = await listXlsxSheets(file);
+      let rawRows: Record<string, string>[] = [];
+      let adapter = null;
+      for (const sheet of sheetNames) {
+        const sheetRows = await parseXlsxFile(file, sheet);
+        if (sheetRows.length === 0) continue;
+        const found = detectAdapter(Object.keys(sheetRows[0]));
+        if (found) {
+          rawRows = sheetRows;
+          adapter = found;
+          break;
+        }
       }
-
-      const headers = Object.keys(rawRows[0]);
-      const adapter = detectAdapter(headers);
 
       if (!adapter) {
         toast.error('Bank format not recognized');
+        return;
+      }
+
+      if (rawRows.length === 0) {
+        toast.error('File is empty or could not be parsed');
         return;
       }
 

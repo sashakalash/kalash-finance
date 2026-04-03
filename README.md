@@ -112,7 +112,7 @@ SUPABASE_PROJECT_REF=zzz \
 ## Telegram Bot Usage
 
 1. Go to **Settings** in the app → **Generate link code**
-2. Send the 6-character code to [@kalash_finance_bot](https://t.me/kalash_finance_bot)
+2. Send the 6-character code to telegram_bot
 3. Once linked:
    - Send `25 coffee` → adds a 25 GEL expense
    - Send a receipt photo → Claude extracts amount, merchant, date and adds the transaction
