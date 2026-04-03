@@ -28,7 +28,13 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const { pathname } = request.nextUrl;
 
-  if (!user && pathname.startsWith('/(protected)')) {
+  if (
+    !user &&
+    (pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/transactions') ||
+      pathname.startsWith('/import') ||
+      pathname.startsWith('/settings'))
+  ) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
