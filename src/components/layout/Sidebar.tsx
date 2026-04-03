@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+// nav
 import { BarChart3, CreditCard, Upload, Settings, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
