@@ -5,7 +5,7 @@ Personal finance tracker with multi-channel transaction input: CSV bank statemen
 ## Features
 
 - **CSV Import** — upload Bank of Georgia `.xlsx` statements, preview normalized transactions, detect duplicates by SHA-256 hash, batch import
-- **Telegram Bot** — send a receipt photo or type `25 coffee` to [@kalash_finance_bot](https://t.me/kalash_finance_bot); receipts are parsed by Claude Vision (Haiku) and added automatically
+- **Telegram Bot** — send a receipt photo or type `25 coffee` to @telegram_bot receipts are parsed by Claude Vision (Haiku) and added automatically
 - **Dashboard** — monthly spending by category (pie chart), 6-month trends (bar chart), key stats
 - **Transaction CRUD** — add, edit, delete transactions manually; filter by date, category, source
 - **Categories** — default set seeded on signup, fully customizable
