@@ -2,6 +2,14 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
+  // Strip Next.js route group prefixes (e.g. /(protected)/, /(public)/) that leak into URLs
+  const stripped = request.nextUrl.pathname.replace(/\/\([^)]+\)/g, '');
+  if (stripped !== request.nextUrl.pathname) {
+    const url = request.nextUrl.clone();
+    url.pathname = stripped || '/';
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
