@@ -31,7 +31,7 @@ export default async function InvitePage({ params }: Props): Promise<React.React
       ? new Date(household.invite_expires_at) > new Date()
       : false;
 
-  if (!isValid) {
+  if (!isValid || !household) {
     return (
       <main className="flex min-h-svh items-center justify-center p-4">
         <div className="w-full max-w-sm space-y-4 text-center">
