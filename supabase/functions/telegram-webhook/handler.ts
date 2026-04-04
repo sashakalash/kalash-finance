@@ -49,10 +49,10 @@ export async function handleUpdate(
   // Service-role client bypasses RLS — used only in Edge Functions
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
-  // ─── Resolve user from chat id ────────────────────────────────────────────
+  // ─── Resolve user + household from chat id ───────────────────────────────
   const { data: link } = await supabase
     .from('telegram_links')
-    .select('user_id')
+    .select('user_id, household_id')
     .eq('telegram_chat_id', chatId)
     .maybeSingle();
 
@@ -120,6 +120,7 @@ export async function handleUpdate(
   }
 
   const userId = link.user_id;
+  const householdId = link.household_id;
 
   // ─── Photo: receipt OCR ───────────────────────────────────────────────────
   if (msg.photo && msg.photo.length > 0) {
@@ -142,14 +143,14 @@ export async function handleUpdate(
         const { data: cat } = await supabase
           .from('categories')
           .select('id')
-          .eq('user_id', userId)
+          .eq('household_id', householdId)
           .eq('name', receipt.category)
           .maybeSingle();
         categoryId = cat?.id ?? null;
       }
 
       const hash = await hashTransaction(
-        userId,
+        householdId,
         date,
         receipt.amount,
         receipt.currency,
@@ -157,6 +158,7 @@ export async function handleUpdate(
       );
 
       const { error } = await supabase.from('transactions').insert({
+        household_id: householdId,
         user_id: userId,
         amount: receipt.amount,
         currency: receipt.currency,
@@ -196,9 +198,10 @@ export async function handleUpdate(
       const description = match[2].trim();
       const date = new Date().toISOString().split('T')[0];
 
-      const hash = await hashTransaction(userId, date, amount, 'GEL', description);
+      const hash = await hashTransaction(householdId, date, amount, 'GEL', description);
 
       const { error } = await supabase.from('transactions').insert({
+        household_id: householdId,
         user_id: userId,
         amount,
         currency: 'GEL',

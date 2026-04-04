@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 
-export function LoginForm(): React.ReactElement {
+export function LoginForm({ next }: { next?: string }): React.ReactElement {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +34,7 @@ export function LoginForm(): React.ReactElement {
       if (error) {
         toast.error(error.message);
       } else {
-        router.push('/dashboard');
+        router.push(next ?? '/dashboard');
         router.refresh();
       }
     }

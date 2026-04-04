@@ -4,14 +4,14 @@ import type { CategorySpend, DashboardStats, MonthlyTrend, Transaction } from '@
 /** Aggregate stats for a date range. */
 export async function fetchDashboardStats(
   supabase: SupabaseClient,
-  userId: string,
+  householdId: string,
   from: string,
   to: string,
 ): Promise<DashboardStats> {
   const { data, error } = await supabase
     .from('transactions')
     .select('amount, type, date, categories(name)')
-    .eq('user_id', userId)
+    .eq('household_id', householdId)
     .gte('date', from)
     .lte('date', to);
 
@@ -34,7 +34,7 @@ export async function fetchDashboardStats(
     totalIncome,
     avgDailySpend: totalSpent / days,
     transactionCount: rows.length,
-    topCategory: null, // computed in fetchCategorySpend
+    topCategory: null,
     currency: 'GEL',
   };
 }
@@ -42,14 +42,14 @@ export async function fetchDashboardStats(
 /** Spending grouped by category for the pie chart. */
 export async function fetchCategorySpend(
   supabase: SupabaseClient,
-  userId: string,
+  householdId: string,
   from: string,
   to: string,
 ): Promise<CategorySpend[]> {
   const { data, error } = await supabase
     .from('transactions')
     .select('amount, categories(name, color, icon)')
-    .eq('user_id', userId)
+    .eq('household_id', householdId)
     .eq('type', 'expense')
     .gte('date', from)
     .lte('date', to)
@@ -60,7 +60,6 @@ export async function fetchCategorySpend(
   const map = new Map<string, CategorySpend>();
   for (const row of data ?? []) {
     const rawCat = row.categories;
-    // Supabase returns a single object for FK joins, but TS infers array — cast safely
     const cat = (Array.isArray(rawCat) ? rawCat[0] : rawCat) as {
       name: string;
       color: string;
@@ -86,7 +85,7 @@ export async function fetchCategorySpend(
 /** Monthly expense + income totals for the last N months. */
 export async function fetchMonthlyTrends(
   supabase: SupabaseClient,
-  userId: string,
+  householdId: string,
   months = 6,
 ): Promise<MonthlyTrend[]> {
   const to = new Date();
@@ -97,7 +96,7 @@ export async function fetchMonthlyTrends(
   const { data, error } = await supabase
     .from('transactions')
     .select('amount, type, date')
-    .eq('user_id', userId)
+    .eq('household_id', householdId)
     .gte('date', from.toISOString().split('T')[0])
     .lte('date', to.toISOString().split('T')[0]);
 
@@ -105,7 +104,7 @@ export async function fetchMonthlyTrends(
 
   const map = new Map<string, { expense: number; income: number }>();
   for (const row of data ?? []) {
-    const key = row.date.slice(0, 7); // "YYYY-MM"
+    const key = row.date.slice(0, 7);
     const entry = map.get(key) ?? { expense: 0, income: 0 };
     if (row.type === 'expense') entry.expense += Number(row.amount);
     else entry.income += Number(row.amount);
@@ -126,13 +125,13 @@ export async function fetchMonthlyTrends(
 /** Last N transactions for the recent list. */
 export async function fetchRecentTransactions(
   supabase: SupabaseClient,
-  userId: string,
+  householdId: string,
   limit = 10,
 ): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from('transactions')
     .select('*, categories(id, name, color, icon)')
-    .eq('user_id', userId)
+    .eq('household_id', householdId)
     .order('date', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(limit);

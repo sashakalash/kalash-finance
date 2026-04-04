@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getHouseholdId } from '@/lib/supabase/household';
 import { ImportWizard } from '@/features/csv-import/ImportWizard';
 import type { Category } from '@/types';
 
@@ -13,10 +14,12 @@ export default async function ImportPage(): Promise<React.ReactElement> {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
+  const householdId = await getHouseholdId(supabase, user.id);
+
   const { data: catData } = await supabase
     .from('categories')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('household_id', householdId)
     .order('name');
 
   const categories = (catData ?? []) as Category[];
@@ -31,7 +34,7 @@ export default async function ImportPage(): Promise<React.ReactElement> {
       </div>
 
       <div className="max-w-3xl">
-        <ImportWizard userId={user.id} categories={categories} />
+        <ImportWizard householdId={householdId} categories={categories} />
       </div>
     </div>
   );

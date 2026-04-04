@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getHouseholdId } from '@/lib/supabase/household';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -24,15 +25,17 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
+  const householdId = await getHouseholdId(supabase, user.id);
+
   const [{ data: txData }, { data: catData }] = await Promise.all([
     supabase
       .from('transactions')
       .select('*, categories(id, name, color, icon)')
-      .eq('user_id', user.id)
+      .eq('household_id', householdId)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(100),
-    supabase.from('categories').select('*').eq('user_id', user.id).order('name'),
+    supabase.from('categories').select('*').eq('household_id', householdId).order('name'),
   ]);
 
   const transactions = (txData ?? []) as Transaction[];

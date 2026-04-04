@@ -4,10 +4,10 @@ import type { RawTransaction } from '@/types';
  * Generate a deterministic SHA-256 hash for a transaction.
  * Used to detect duplicates across multiple imports.
  */
-export async function generateHash(userId: string, tx: RawTransaction): Promise<string> {
+export async function generateHash(householdId: string, tx: RawTransaction): Promise<string> {
   // Normalize before hashing to catch minor formatting differences
   const normalized = [
-    userId,
+    householdId,
     tx.date,
     tx.amount.toFixed(2),
     tx.currency.toUpperCase(),

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { getHouseholdId } from '@/lib/supabase/household';
 import { redirect } from 'next/navigation';
 import { StatsGrid } from '@/features/dashboard/StatsGrid';
 import { SpendingByCategoryChart } from '@/features/dashboard/SpendingByCategoryChart';
@@ -22,13 +23,14 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
+  const householdId = await getHouseholdId(supabase, user.id);
   const { from, to } = currentMonthRange();
 
   const [stats, categorySpend, trends, recent] = await Promise.all([
-    fetchDashboardStats(supabase, user.id, from, to),
-    fetchCategorySpend(supabase, user.id, from, to),
-    fetchMonthlyTrends(supabase, user.id, 6),
-    fetchRecentTransactions(supabase, user.id, 10),
+    fetchDashboardStats(supabase, householdId, from, to),
+    fetchCategorySpend(supabase, householdId, from, to),
+    fetchMonthlyTrends(supabase, householdId, 6),
+    fetchRecentTransactions(supabase, householdId, 10),
   ]);
 
   const topCategory = categorySpend[0]?.name ?? null;

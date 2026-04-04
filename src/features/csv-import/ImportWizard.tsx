@@ -21,11 +21,11 @@ interface ImportResult {
 }
 
 interface ImportWizardProps {
-  userId: string;
+  householdId: string;
   categories: Category[];
 }
 
-export function ImportWizard({ userId, categories }: ImportWizardProps): React.ReactElement {
+export function ImportWizard({ householdId, categories }: ImportWizardProps): React.ReactElement {
   const [step, setStep] = useState<Step>('upload');
   const [loading, setLoading] = useState(false);
   const [filename, setFilename] = useState('');
@@ -75,7 +75,7 @@ export function ImportWizard({ userId, categories }: ImportWizardProps): React.R
 
       // Generate hashes and fetch existing to detect duplicates
       const [hashes, existingHashes] = await Promise.all([
-        Promise.all(normalized.map((tx) => generateHash(userId, tx))),
+        Promise.all(normalized.map((tx) => generateHash(householdId, tx))),
         fetchExistingHashes(),
       ]);
 

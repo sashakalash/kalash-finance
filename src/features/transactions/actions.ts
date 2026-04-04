@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/supabase/auth';
+import { getHouseholdId } from '@/lib/supabase/household';
 import { generateHash } from '@/services/xlsx/dedup';
 import {
   CreateTransactionSchema,
@@ -17,9 +18,10 @@ import type {
 /** Create a single transaction manually. */
 export async function createTransaction(input: CreateTransactionInput): Promise<void> {
   const { supabase, user } = await requireUser();
+  const householdId = await getHouseholdId(supabase, user.id);
   const data = CreateTransactionSchema.parse(input);
 
-  const hash = await generateHash(user.id, {
+  const hash = await generateHash(householdId, {
     amount: data.amount,
     currency: data.currency ?? 'GEL',
     type: data.type,
@@ -31,6 +33,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 
   const { error } = await supabase.from('transactions').insert({
     ...data,
+    household_id: householdId,
     user_id: user.id,
     hash,
   });
@@ -43,13 +46,14 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 /** Update an existing transaction. */
 export async function updateTransaction(input: UpdateTransactionInput): Promise<void> {
   const { supabase, user } = await requireUser();
+  const householdId = await getHouseholdId(supabase, user.id);
   const { id, ...data } = UpdateTransactionSchema.parse(input);
 
   const { error } = await supabase
     .from('transactions')
     .update({ ...data, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .eq('user_id', user.id); // RLS double-check
+    .eq('household_id', householdId);
 
   if (error) throw new Error(error.message);
   revalidatePath('/(protected)/dashboard');
@@ -59,12 +63,13 @@ export async function updateTransaction(input: UpdateTransactionInput): Promise<
 /** Delete a transaction. */
 export async function deleteTransaction(id: string): Promise<void> {
   const { supabase, user } = await requireUser();
+  const householdId = await getHouseholdId(supabase, user.id);
 
   const { error } = await supabase
     .from('transactions')
     .delete()
     .eq('id', id)
-    .eq('user_id', user.id);
+    .eq('household_id', householdId);
 
   if (error) throw new Error(error.message);
   revalidatePath('/(protected)/dashboard');
@@ -76,13 +81,13 @@ export async function importTransactions(
   input: ImportTransactionsInput,
 ): Promise<{ imported: number; duplicates: number }> {
   const { supabase, user } = await requireUser();
+  const householdId = await getHouseholdId(supabase, user.id);
   const { transactions, bank_format: bankFormat, filename } = ImportTransactionsSchema.parse(input);
 
-  // Create import record
   const { data: importRecord, error: importErr } = await supabase
     .from('csv_imports')
     .insert({
-      user_id: user.id,
+      household_id: householdId,
       filename,
       bank_format: bankFormat,
       row_count: transactions.length,
@@ -93,18 +98,16 @@ export async function importTransactions(
 
   if (importErr) throw new Error(importErr.message);
 
-  // Fetch existing hashes to detect duplicates client-side
   const { data: existing } = await supabase
     .from('transactions')
     .select('hash')
-    .eq('user_id', user.id)
+    .eq('household_id', householdId)
     .in(
       'hash',
       transactions.map((t) => t.hash),
     );
 
   const existingHashes = new Set((existing ?? []).map((r) => r.hash));
-  // Deduplicate within the incoming batch itself before checking against DB
   const seenHashes = new Set<string>();
   const toInsert = transactions.filter((t) => {
     if (existingHashes.has(t.hash) || seenHashes.has(t.hash)) return false;
@@ -114,9 +117,9 @@ export async function importTransactions(
   const duplicates = transactions.length - toInsert.length;
 
   if (toInsert.length > 0) {
-    // Insert in batches of 100
     for (let i = 0; i < toInsert.length; i += 100) {
       const batch = toInsert.slice(i, i + 100).map((t) => ({
+        household_id: householdId,
         user_id: user.id,
         amount: t.amount,
         currency: t.currency,

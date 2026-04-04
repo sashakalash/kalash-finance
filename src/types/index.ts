@@ -3,9 +3,25 @@ export type TransactionSource = 'csv' | 'telegram' | 'manual';
 export type CsvImportStatus = 'pending' | 'processing' | 'completed' | 'failed';
 export type BankFormat = 'bog' | 'custom';
 
+export interface Household {
+  id: string;
+  name: string;
+  invite_code: string | null;
+  invite_expires_at: string | null;
+  created_at: string;
+}
+
+export interface HouseholdMember {
+  household_id: string;
+  user_id: string;
+  role: 'owner' | 'member';
+  email: string;
+  joined_at: string;
+}
+
 export interface Category {
   id: string;
-  user_id: string;
+  household_id: string;
   name: string;
   icon: string | null;
   color: string | null;
@@ -15,6 +31,7 @@ export interface Category {
 
 export interface Transaction {
   id: string;
+  household_id: string;
   user_id: string;
   amount: number;
   currency: string;
@@ -33,7 +50,7 @@ export interface Transaction {
 
 export interface CsvImport {
   id: string;
-  user_id: string;
+  household_id: string;
   filename: string;
   bank_format: BankFormat;
   row_count: number;
@@ -47,6 +64,7 @@ export interface CsvImport {
 export interface TelegramLink {
   id: string;
   user_id: string;
+  household_id: string;
   telegram_chat_id: number;
   telegram_username: string | null;
   linked_at: string;

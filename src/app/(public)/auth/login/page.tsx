@@ -4,7 +4,13 @@ import { LoginForm } from '@/features/auth/LoginForm';
 
 export const metadata: Metadata = { title: 'Sign in — Kalash Finance' };
 
-export default function LoginPage(): React.ReactElement {
+interface Props {
+  searchParams: Promise<{ next?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: Props): Promise<React.ReactElement> {
+  const { next } = await searchParams;
+
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
@@ -13,7 +19,7 @@ export default function LoginPage(): React.ReactElement {
           <p className="text-sm text-muted-foreground">Sign in to your account</p>
         </div>
 
-        <LoginForm />
+        <LoginForm next={next} />
 
         <p className="text-center text-sm text-muted-foreground">
           No account?{' '}
