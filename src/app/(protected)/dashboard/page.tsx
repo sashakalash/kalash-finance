@@ -23,15 +23,33 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  const householdId = await getHouseholdId(supabase, user.id);
+  let householdId: string;
+  try {
+    householdId = await getHouseholdId(supabase, user.id);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[dashboard] getHouseholdId failed:', msg);
+    throw new Error(`getHouseholdId: ${msg}`);
+  }
+
   const { from, to } = currentMonthRange();
 
-  const [stats, categorySpend, trends, recent] = await Promise.all([
-    fetchDashboardStats(supabase, householdId, from, to),
-    fetchCategorySpend(supabase, householdId, from, to),
-    fetchMonthlyTrends(supabase, householdId, 6),
-    fetchRecentTransactions(supabase, householdId, 10),
-  ]);
+  let stats: Awaited<ReturnType<typeof fetchDashboardStats>>;
+  let categorySpend: Awaited<ReturnType<typeof fetchCategorySpend>>;
+  let trends: Awaited<ReturnType<typeof fetchMonthlyTrends>>;
+  let recent: Awaited<ReturnType<typeof fetchRecentTransactions>>;
+  try {
+    [stats, categorySpend, trends, recent] = await Promise.all([
+      fetchDashboardStats(supabase, householdId, from, to),
+      fetchCategorySpend(supabase, householdId, from, to),
+      fetchMonthlyTrends(supabase, householdId, 6),
+      fetchRecentTransactions(supabase, householdId, 10),
+    ]);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[dashboard] queries failed:', msg);
+    throw new Error(`queries: ${msg}`);
+  }
 
   const topCategory = categorySpend[0]?.name ?? null;
 
