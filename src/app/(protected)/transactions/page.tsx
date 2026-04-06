@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getHouseholdId } from '@/lib/supabase/household';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge'; // used for Source badge
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { AddTransactionDialog } from '@/features/transactions/AddTransactionDialog';
 import { DeleteTransactionButton } from '@/features/transactions/DeleteTransactionButton';
+import { TransactionCategoryCell } from '@/features/transactions/TransactionCategoryCell';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { Category, Transaction } from '@/types';
 
@@ -69,12 +70,6 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
               </TableRow>
             ) : (
               transactions.map((tx) => {
-                const cat =
-                  (
-                    tx as Transaction & {
-                      categories?: { name: string; color: string; icon: string } | null;
-                    }
-                  ).categories ?? null;
                 return (
                   <TableRow key={tx.id}>
                     <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
@@ -84,17 +79,11 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
                       {tx.description ?? '—'}
                     </TableCell>
                     <TableCell>
-                      {cat ? (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs"
-                          style={{ borderColor: cat.color, color: cat.color }}
-                        >
-                          {cat.icon} {cat.name}
-                        </Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
+                      <TransactionCategoryCell
+                        transactionId={tx.id}
+                        categoryId={tx.category_id}
+                        categories={categories}
+                      />
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs capitalize">

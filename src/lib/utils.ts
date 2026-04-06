@@ -39,3 +39,11 @@ export function currentMonthRange(): { from: string; to: string } {
   const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
   return { from, to };
 }
+
+/** Get first day N months ago through today as YYYY-MM-DD */
+export function lastNMonthsRange(n: number): { from: string; to: string } {
+  const now = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth() - (n - 1), 1).toISOString().split('T')[0];
+  const to = now.toISOString().split('T')[0];
+  return { from, to };
+}
