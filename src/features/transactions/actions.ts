@@ -88,6 +88,7 @@ export async function importTransactions(
     .from('csv_imports')
     .insert({
       household_id: householdId,
+      user_id: user.id,
       filename,
       bank_format: bankFormat,
       row_count: transactions.length,
