@@ -18,17 +18,17 @@ export async function generateTelegramLinkCode(): Promise<string> {
 
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-  await supabase.from('telegram_links').upsert(
+  const { error } = await supabase.from('telegram_links').upsert(
     {
       user_id: user.id,
       household_id: householdId,
-      telegram_chat_id: 0,
       link_code: code,
       link_code_expires_at: expiresAt,
     },
     { onConflict: 'user_id', ignoreDuplicates: false },
   );
 
+  if (error) throw new Error(error.message);
   return code;
 }
 
