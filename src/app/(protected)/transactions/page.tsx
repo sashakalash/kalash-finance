@@ -69,10 +69,12 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
               </TableRow>
             ) : (
               transactions.map((tx) => {
-                const cat = tx.category as
-                  | { name: string; color: string; icon: string }
-                  | null
-                  | undefined;
+                const cat =
+                  (
+                    tx as Transaction & {
+                      categories?: { name: string; color: string; icon: string } | null;
+                    }
+                  ).categories ?? null;
                 return (
                   <TableRow key={tx.id}>
                     <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
