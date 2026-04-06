@@ -23,53 +23,54 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  let householdId: string;
+  // DEBUG: catch and render errors directly
   try {
-    householdId = await getHouseholdId(supabase, user.id);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error('[dashboard] getHouseholdId failed:', msg);
-    throw new Error(`getHouseholdId: ${msg}`);
-  }
+    const householdId = await getHouseholdId(supabase, user.id);
+    const { from, to } = currentMonthRange();
 
-  const { from, to } = currentMonthRange();
-
-  let stats: Awaited<ReturnType<typeof fetchDashboardStats>>;
-  let categorySpend: Awaited<ReturnType<typeof fetchCategorySpend>>;
-  let trends: Awaited<ReturnType<typeof fetchMonthlyTrends>>;
-  let recent: Awaited<ReturnType<typeof fetchRecentTransactions>>;
-  try {
-    [stats, categorySpend, trends, recent] = await Promise.all([
+    const [stats, categorySpend, trends, recent] = await Promise.all([
       fetchDashboardStats(supabase, householdId, from, to),
       fetchCategorySpend(supabase, householdId, from, to),
       fetchMonthlyTrends(supabase, householdId, 6),
       fetchRecentTransactions(supabase, householdId, 10),
     ]);
+
+    const topCategory = categorySpend[0]?.name ?? null;
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            {new Date(from).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+
+        <StatsGrid stats={stats} topCategory={topCategory} />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <SpendingByCategoryChart data={categorySpend} />
+          <MonthlyTrendsChart data={trends} />
+        </div>
+
+        <RecentTransactions transactions={recent} />
+      </div>
+    );
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error('[dashboard] queries failed:', msg);
-    throw new Error(`queries: ${msg}`);
+    const stack = e instanceof Error ? e.stack : '';
+    return (
+      <div className="space-y-4 p-6">
+        <h1 className="text-xl font-bold text-red-600">Dashboard Error (debug)</h1>
+        <pre className="overflow-auto rounded bg-gray-100 p-4 text-sm text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+          {msg}
+        </pre>
+        <details>
+          <summary className="cursor-pointer text-sm text-muted-foreground">Stack trace</summary>
+          <pre className="mt-2 overflow-auto text-xs text-muted-foreground">{stack}</pre>
+        </details>
+        <p className="text-xs text-muted-foreground">user.id: {user.id}</p>
+      </div>
+    );
   }
-
-  const topCategory = categorySpend[0]?.name ?? null;
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          {new Date(from).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-        </p>
-      </div>
-
-      <StatsGrid stats={stats} topCategory={topCategory} />
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SpendingByCategoryChart data={categorySpend} />
-        <MonthlyTrendsChart data={trends} />
-      </div>
-
-      <RecentTransactions transactions={recent} />
-    </div>
-  );
 }
