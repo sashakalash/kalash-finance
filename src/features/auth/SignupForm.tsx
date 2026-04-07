@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 
-export function SignupForm(): React.ReactElement {
+export function SignupForm({ next }: { next?: string }): React.ReactElement {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,12 +26,14 @@ export function SignupForm(): React.ReactElement {
     }
     setLoading(true);
     const supabase = createClient();
+    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    const callbackUrl = next
+      ? `${origin}/auth/callback?next=${encodeURIComponent(next)}`
+      : `${origin}/auth/callback`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/auth/callback`,
-      },
+      options: { emailRedirectTo: callbackUrl },
     });
     if (error) {
       toast.error(error.message);

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { Button } from '@/components/ui/button';
 import { acceptHouseholdInvite } from './actions';
 
@@ -13,6 +14,7 @@ export function AcceptInviteButton({ code }: { code: string }): React.ReactEleme
     try {
       await acceptHouseholdInvite(code);
     } catch (err) {
+      if (isRedirectError(err)) throw err;
       toast.error(err instanceof Error ? err.message : 'Failed to join household');
       setLoading(false);
     }
