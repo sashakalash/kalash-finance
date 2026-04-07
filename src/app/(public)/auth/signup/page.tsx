@@ -4,7 +4,13 @@ import { SignupForm } from '@/features/auth/SignupForm';
 
 export const metadata: Metadata = { title: 'Sign up — Kalash Finance' };
 
-export default function SignupPage(): React.ReactElement {
+interface Props {
+  searchParams: Promise<{ next?: string }>;
+}
+
+export default async function SignupPage({ searchParams }: Props): Promise<React.ReactElement> {
+  const { next } = await searchParams;
+
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
@@ -13,7 +19,7 @@ export default function SignupPage(): React.ReactElement {
           <p className="text-sm text-muted-foreground">Start tracking your finances</p>
         </div>
 
-        <SignupForm />
+        <SignupForm next={next} />
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}

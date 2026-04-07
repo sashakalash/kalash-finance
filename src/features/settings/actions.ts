@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/supabase/auth';
 import { getHouseholdId } from '@/lib/supabase/household';
 import { CreateCategorySchema } from '@/types/zod';
@@ -84,8 +83,8 @@ export async function generateHouseholdInvite(): Promise<string> {
   return code;
 }
 
-/** Accept an invite and join the household. */
-export async function acceptHouseholdInvite(code: string): Promise<void> {
+/** Accept an invite and join the household. Returns an error message or null on success. */
+export async function acceptHouseholdInvite(code: string): Promise<{ error: string | null }> {
   const { supabase, user } = await requireUser();
 
   // Find the household by invite code
@@ -95,9 +94,9 @@ export async function acceptHouseholdInvite(code: string): Promise<void> {
     .eq('invite_code', code)
     .single();
 
-  if (hErr || !household) throw new Error('Invalid invite code');
+  if (hErr || !household) return { error: 'Invalid invite code' };
   if (new Date(household.invite_expires_at as string) < new Date()) {
-    throw new Error('Invite link has expired');
+    return { error: 'Invite link has expired' };
   }
 
   // Get current household to clean up after moving
@@ -109,9 +108,9 @@ export async function acceptHouseholdInvite(code: string): Promise<void> {
 
   const oldHouseholdId = currentMembership?.household_id as string | undefined;
 
-  // Already in this household
+  // Already in this household — just go to dashboard
   if (oldHouseholdId === household.id) {
-    redirect('/dashboard');
+    return { error: null };
   }
 
   // Join new household
@@ -122,7 +121,7 @@ export async function acceptHouseholdInvite(code: string): Promise<void> {
     email: user.email ?? '',
   });
 
-  if (joinErr) throw new Error(joinErr.message);
+  if (joinErr) return { error: joinErr.message };
 
   // Leave old household
   if (oldHouseholdId) {
@@ -136,5 +135,5 @@ export async function acceptHouseholdInvite(code: string): Promise<void> {
     await supabase.rpc('cleanup_empty_household', { hid: oldHouseholdId });
   }
 
-  redirect('/dashboard');
+  return { error: null };
 }

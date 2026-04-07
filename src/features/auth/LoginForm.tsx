@@ -20,9 +20,13 @@ export function LoginForm({ next }: { next?: string }): React.ReactElement {
     const supabase = createClient();
 
     if (magicMode) {
+      const origin = window.location.origin;
+      const callbackUrl = next
+        ? `${origin}/auth/callback?next=${encodeURIComponent(next)}`
+        : `${origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { emailRedirectTo: callbackUrl },
       });
       if (error) {
         toast.error(error.message);

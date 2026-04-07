@@ -23,7 +23,10 @@ export default async function LoginPage({ searchParams }: Props): Promise<React.
 
         <p className="text-center text-sm text-muted-foreground">
           No account?{' '}
-          <Link href="/auth/signup" className="font-medium underline underline-offset-4">
+          <Link
+            href={next ? `/auth/signup?next=${encodeURIComponent(next)}` : '/auth/signup'}
+            className="font-medium underline underline-offset-4"
+          >
             Sign up
           </Link>
         </p>
