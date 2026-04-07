@@ -45,7 +45,7 @@ export function TransactionCategoryCell({
 
   return (
     <div className="flex items-center gap-1">
-      <Select value={selected} onValueChange={setSelected}>
+      <Select value={selected} onValueChange={(v) => setSelected(v ?? '')}>
         <SelectTrigger
           className="h-7 w-36 text-xs"
           style={{
