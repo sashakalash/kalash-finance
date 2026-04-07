@@ -14,6 +14,7 @@ import type {
   ImportTransactionsInput,
   UpdateTransactionInput,
 } from '@/types/zod';
+import type { Transaction } from '@/types';
 
 /** Create a single transaction manually. */
 export async function createTransaction(input: CreateTransactionInput): Promise<void> {
@@ -39,8 +40,8 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
   });
 
   if (error) throw new Error(error.message);
-  revalidatePath('/(protected)/dashboard');
-  revalidatePath('/(protected)/transactions');
+  revalidatePath('/dashboard');
+  revalidatePath('/transactions');
 }
 
 /** Update an existing transaction. */
@@ -49,15 +50,17 @@ export async function updateTransaction(input: UpdateTransactionInput): Promise<
   const householdId = await getHouseholdId(supabase, user.id);
   const { id, ...data } = UpdateTransactionSchema.parse(input);
 
-  const { error } = await supabase
+  const { data: rows, error } = await supabase
     .from('transactions')
     .update({ ...data, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .eq('household_id', householdId);
+    .eq('household_id', householdId)
+    .select('id');
 
   if (error) throw new Error(error.message);
-  revalidatePath('/(protected)/dashboard');
-  revalidatePath('/(protected)/transactions');
+  if (!rows?.length) throw new Error('Update failed — transaction not found or access denied');
+  revalidatePath('/dashboard');
+  revalidatePath('/transactions');
 }
 
 /** Delete a transaction. */
@@ -72,8 +75,25 @@ export async function deleteTransaction(id: string): Promise<void> {
     .eq('household_id', householdId);
 
   if (error) throw new Error(error.message);
-  revalidatePath('/(protected)/dashboard');
-  revalidatePath('/(protected)/transactions');
+  revalidatePath('/dashboard');
+  revalidatePath('/transactions');
+}
+
+/** Fetch a page of transactions for the current household (newest first). */
+export async function fetchTransactionsPage(offset: number, limit = 50): Promise<Transaction[]> {
+  const { supabase, user } = await requireUser();
+  const householdId = await getHouseholdId(supabase, user.id);
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*, categories(id, name, color, icon)')
+    .eq('household_id', householdId)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Transaction[];
 }
 
 /** Batch import from CSV. Returns { imported, duplicates } counts. */
@@ -147,8 +167,8 @@ export async function importTransactions(
     })
     .eq('id', importRecord.id);
 
-  revalidatePath('/(protected)/dashboard');
-  revalidatePath('/(protected)/transactions');
+  revalidatePath('/dashboard');
+  revalidatePath('/transactions');
 
   return { imported: toInsert.length, duplicates };
 }

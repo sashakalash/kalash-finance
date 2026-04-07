@@ -73,12 +73,6 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
         />
 
         <CategoryManager categories={categories} />
-
-        <div className="rounded-lg border p-4 text-sm text-muted-foreground">
-          <p>
-            Signed in as <span className="font-medium text-foreground">{user.email}</span>
-          </p>
-        </div>
       </div>
     </div>
   );

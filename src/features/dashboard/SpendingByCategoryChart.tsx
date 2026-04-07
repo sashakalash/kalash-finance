@@ -43,7 +43,8 @@ export function SpendingByCategoryChart({
               cy="50%"
               innerRadius={60}
               outerRadius={90}
-              paddingAngle={2}
+              paddingAngle={0}
+              minAngle={5}
             >
               {data.map((entry) => (
                 <Cell key={entry.name} fill={entry.color} />

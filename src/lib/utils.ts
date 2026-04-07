@@ -32,18 +32,23 @@ export function formatMonth(dateStr: string): string {
   }).format(new Date(dateStr));
 }
 
+/** Format a local Date as YYYY-MM-DD without UTC conversion. */
+export function toLocalDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 /** Get first and last day of current month as YYYY-MM-DD */
 export function currentMonthRange(): { from: string; to: string } {
   const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  const from = toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1));
+  const to = toLocalDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
   return { from, to };
 }
 
 /** Get first day N months ago through today as YYYY-MM-DD */
 export function lastNMonthsRange(n: number): { from: string; to: string } {
   const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth() - (n - 1), 1).toISOString().split('T')[0];
-  const to = now.toISOString().split('T')[0];
+  const from = toLocalDateString(new Date(now.getFullYear(), now.getMonth() - (n - 1), 1));
+  const to = toLocalDateString(now);
   return { from, to };
 }

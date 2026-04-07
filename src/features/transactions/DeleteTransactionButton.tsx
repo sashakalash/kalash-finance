@@ -18,11 +18,13 @@ import { deleteTransaction } from './actions';
 interface DeleteTransactionButtonProps {
   id: string;
   description: string | null;
+  onDelete?: () => void;
 }
 
 export function DeleteTransactionButton({
   id,
   description,
+  onDelete,
 }: DeleteTransactionButtonProps): React.ReactElement {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,7 @@ export function DeleteTransactionButton({
       await deleteTransaction(id);
       toast.success('Transaction deleted');
       setOpen(false);
+      onDelete?.();
     } catch {
       toast.error('Failed to delete transaction');
     } finally {

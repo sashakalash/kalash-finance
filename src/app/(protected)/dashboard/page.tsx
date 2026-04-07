@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { getHouseholdId } from '@/lib/supabase/household';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 import { StatsGrid } from '@/features/dashboard/StatsGrid';
 import { SpendingByCategoryChart } from '@/features/dashboard/SpendingByCategoryChart';
 import { MonthlyTrendsChart } from '@/features/dashboard/MonthlyTrendsChart';
 import { RecentTransactions } from '@/features/dashboard/RecentTransactions';
+import { DateRangePicker } from '@/features/dashboard/DateRangePicker';
 import {
   fetchDashboardStats,
   fetchCategorySpend,
@@ -16,7 +18,20 @@ import { lastNMonthsRange } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Dashboard — Kalash Finance' };
 
-export default async function DashboardPage(): Promise<React.ReactElement> {
+interface SearchParams {
+  from?: string;
+  to?: string;
+}
+
+function isValidDate(s: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s));
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<React.ReactElement> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,7 +39,10 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
   if (!user) redirect('/auth/login');
 
   const householdId = await getHouseholdId(supabase, user.id);
-  const { from, to } = lastNMonthsRange(3);
+  const params = await searchParams;
+  const defaults = lastNMonthsRange(3);
+  const from = isValidDate(params.from ?? '') ? (params.from as string) : defaults.from;
+  const to = isValidDate(params.to ?? '') ? (params.to as string) : defaults.to;
 
   const [stats, categorySpend, trends, recent] = await Promise.all([
     fetchDashboardStats(supabase, householdId, from, to),
@@ -37,13 +55,11 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          {new Date(from).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-          {' — '}
-          {new Date(to).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-        </p>
+        <Suspense>
+          <DateRangePicker from={from} to={to} />
+        </Suspense>
       </div>
 
       <StatsGrid stats={stats} topCategory={topCategory} />

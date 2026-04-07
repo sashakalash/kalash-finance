@@ -115,7 +115,16 @@ export const gelAdapter: BankAdapter = {
     const rawGel = row.GEL;
 
     // Skip balance summary rows and rows without transaction details
-    if (!details || details.startsWith('Balance') || rawGel === undefined || rawGel === '') {
+    const detailsLower = details.toLowerCase();
+    if (
+      !details ||
+      detailsLower.startsWith('balance') ||
+      detailsLower.startsWith('total') ||
+      detailsLower.startsWith('opening') ||
+      detailsLower.startsWith('closing') ||
+      rawGel === undefined ||
+      rawGel === ''
+    ) {
       return null;
     }
 

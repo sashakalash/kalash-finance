@@ -8,21 +8,31 @@ export async function fetchDashboardStats(
   from: string,
   to: string,
 ): Promise<DashboardStats> {
-  const { data, error } = await supabase
-    .from('transactions')
-    .select('amount, type, date, categories(name)')
-    .eq('household_id', householdId)
-    .gte('date', from)
-    .lte('date', to);
+  const [expenseRes, incomeRes] = await Promise.all([
+    supabase
+      .from('transactions')
+      .select('amount')
+      .eq('household_id', householdId)
+      .eq('type', 'expense')
+      .gte('date', from)
+      .lte('date', to),
+    supabase
+      .from('transactions')
+      .select('amount')
+      .eq('household_id', householdId)
+      .eq('type', 'income')
+      .gte('date', from)
+      .lte('date', to),
+  ]);
 
-  if (error) throw new Error(error.message);
+  if (expenseRes.error) throw new Error(expenseRes.error.message);
+  if (incomeRes.error) throw new Error(incomeRes.error.message);
 
-  const rows = (data ?? []) as Array<{ amount: number; type: string; date: string }>;
-  const expenses = rows.filter((r) => r.type === 'expense');
-  const totalSpent = expenses.reduce((s, r) => s + Number(r.amount), 0);
-  const totalIncome = rows
-    .filter((r) => r.type === 'income')
-    .reduce((s, r) => s + Number(r.amount), 0);
+  const expenseRows = (expenseRes.data ?? []) as Array<{ amount: number }>;
+  const incomeRows = (incomeRes.data ?? []) as Array<{ amount: number }>;
+
+  const totalSpent = expenseRows.reduce((s, r) => s + Number(r.amount), 0);
+  const totalIncome = incomeRows.reduce((s, r) => s + Number(r.amount), 0);
 
   const days = Math.max(
     1,
@@ -33,7 +43,7 @@ export async function fetchDashboardStats(
     totalSpent,
     totalIncome,
     avgDailySpend: totalSpent / days,
-    transactionCount: rows.length,
+    transactionCount: expenseRows.length,
     topCategory: null,
     currency: 'GEL',
   };

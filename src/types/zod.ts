@@ -14,8 +14,17 @@ export const CreateTransactionSchema = z.object({
   source: TransactionSourceSchema.default('manual'),
 });
 
-export const UpdateTransactionSchema = CreateTransactionSchema.partial().extend({
+export const UpdateTransactionSchema = z.object({
   id: z.string().uuid(),
+  amount: z.number().positive().optional(),
+  currency: z.string().length(3).optional(),
+  type: TransactionTypeSchema.optional(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  description: z.string().min(1).max(255).nullable().optional(),
+  category_id: z.string().uuid().nullable().optional(),
 });
 
 export const CreateCategorySchema = z.object({

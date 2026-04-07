@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Activity, Tag } from 'lucide-react';
+import { TrendingDown, TrendingUp, Activity, Hash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import type { DashboardStats } from '@/types';
@@ -8,7 +8,7 @@ interface StatsGridProps {
   topCategory: string | null;
 }
 
-export function StatsGrid({ stats, topCategory }: StatsGridProps): React.ReactElement {
+export function StatsGrid({ stats }: StatsGridProps): React.ReactElement {
   const items = [
     {
       label: 'Total spent',
@@ -29,9 +29,9 @@ export function StatsGrid({ stats, topCategory }: StatsGridProps): React.ReactEl
       color: 'text-blue-500',
     },
     {
-      label: 'Top category',
-      value: topCategory ?? '—',
-      icon: Tag,
+      label: 'Expense txns',
+      value: String(stats.transactionCount),
+      icon: Hash,
       color: 'text-purple-500',
     },
   ];

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Select,
@@ -10,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { updateTransaction } from './actions';
 import type { Category } from '@/types';
 
@@ -18,26 +18,34 @@ interface TransactionCategoryCellProps {
   transactionId: string;
   categoryId: string | null;
   categories: Category[];
+  onCategoryChange?: (categoryId: string | null) => void;
 }
 
 export function TransactionCategoryCell({
   transactionId,
   categoryId,
   categories,
+  onCategoryChange,
 }: TransactionCategoryCellProps): React.ReactElement {
+  const router = useRouter();
   const [selected, setSelected] = useState(categoryId ?? '');
   const [saving, setSaving] = useState(false);
 
-  const isDirty = selected !== (categoryId ?? '');
+  // Base UI Select uses null for "no value" — map empty string ↔ null at the boundary
+  const selectValue = selected || null;
   const selectedCat = categories.find((c) => c.id === selected) ?? null;
 
-  async function save(): Promise<void> {
+  async function handleChange(value: string | null): Promise<void> {
+    const next = value ?? null;
+    setSelected(next ?? '');
     setSaving(true);
     try {
-      await updateTransaction({ id: transactionId, category_id: selected || null });
-      toast.success('Category updated');
+      await updateTransaction({ id: transactionId, category_id: next });
+      onCategoryChange?.(next);
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update');
+      toast.error(err instanceof Error ? err.message : 'Failed to update category');
+      setSelected(categoryId ?? '');
     } finally {
       setSaving(false);
     }
@@ -45,7 +53,7 @@ export function TransactionCategoryCell({
 
   return (
     <div className="flex items-center gap-1">
-      <Select value={selected} onValueChange={(v) => setSelected(v ?? '')}>
+      <Select value={selectValue} onValueChange={handleChange} disabled={saving}>
         <SelectTrigger
           className="h-7 w-36 text-xs"
           style={{
@@ -53,9 +61,13 @@ export function TransactionCategoryCell({
             borderColor: selectedCat?.color ?? undefined,
           }}
         >
-          <SelectValue placeholder="—">
-            {selectedCat ? `${selectedCat.icon ?? ''} ${selectedCat.name}`.trim() : '—'}
-          </SelectValue>
+          {saving ? (
+            <Loader2 size={10} className="animate-spin" />
+          ) : (
+            <SelectValue placeholder="—">
+              {selectedCat ? `${selectedCat.icon ?? ''} ${selectedCat.name}`.trim() : '—'}
+            </SelectValue>
+          )}
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="">— None</SelectItem>
@@ -66,18 +78,6 @@ export function TransactionCategoryCell({
           ))}
         </SelectContent>
       </Select>
-      {isDirty && (
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-6 w-6 shrink-0 text-green-500 hover:text-green-600"
-          disabled={saving}
-          onClick={save}
-          aria-label="Save category"
-        >
-          {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-        </Button>
-      )}
     </div>
   );
 }
