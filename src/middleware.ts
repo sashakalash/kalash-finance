@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const PENDING_INVITE_COOKIE = 'pending_invite';
+
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   // Strip Next.js route group prefixes (e.g. /(protected)/, /(public)/) that leak into URLs
   const stripped = request.nextUrl.pathname.replace(/\/\([^)]+\)/g, '');
@@ -35,6 +37,26 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Unauthenticated user visiting /invite/[code] — save code in cookie so we can
+  // redirect after signup + email confirmation (Supabase drops ?next from emailRedirectTo).
+  const inviteMatch = pathname.match(/^\/invite\/([A-Za-z0-9]+)$/);
+  if (!user && inviteMatch) {
+    const res = NextResponse.redirect(
+      new URL(`/auth/login?next=/invite/${inviteMatch[1]}`, request.url),
+    );
+    res.cookies.set(PENDING_INVITE_COOKIE, inviteMatch[1], { path: '/', maxAge: 60 * 60 * 24 * 3 });
+    return res;
+  }
+
+  // Authenticated user with a pending invite cookie — redirect to the invite page
+  // so they can accept it (handles the post-signup flow).
+  const pendingInvite = request.cookies.get(PENDING_INVITE_COOKIE)?.value;
+  if (user && pendingInvite && !pathname.startsWith('/invite/')) {
+    const res = NextResponse.redirect(new URL(`/invite/${pendingInvite}`, request.url));
+    res.cookies.delete(PENDING_INVITE_COOKIE);
+    return res;
+  }
 
   if (
     !user &&

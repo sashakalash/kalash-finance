@@ -87,53 +87,14 @@ export async function generateHouseholdInvite(): Promise<string> {
 export async function acceptHouseholdInvite(code: string): Promise<{ error: string | null }> {
   const { supabase, user } = await requireUser();
 
-  // Find the household by invite code
-  const { data: household, error: hErr } = await supabase
-    .from('households')
-    .select('id, name, invite_expires_at')
-    .eq('invite_code', code)
-    .single();
-
-  if (hErr || !household) return { error: 'Invalid invite code' };
-  if (new Date(household.invite_expires_at as string) < new Date()) {
-    return { error: 'Invite link has expired' };
-  }
-
-  // Get current household to clean up after moving
-  const { data: currentMembership } = await supabase
-    .from('household_members')
-    .select('household_id')
-    .eq('user_id', user.id)
-    .single();
-
-  const oldHouseholdId = currentMembership?.household_id as string | undefined;
-
-  // Already in this household — just go to dashboard
-  if (oldHouseholdId === household.id) {
-    return { error: null };
-  }
-
-  // Join new household
-  const { error: joinErr } = await supabase.from('household_members').insert({
-    household_id: household.id,
-    user_id: user.id,
-    role: 'member',
-    email: user.email ?? '',
+  const { data, error: rpcErr } = await supabase.rpc('accept_household_invite', {
+    invite_code_input: code,
+    calling_user_id: user.id,
+    calling_user_email: user.email ?? '',
   });
 
-  if (joinErr) return { error: joinErr.message };
-
-  // Leave old household
-  if (oldHouseholdId) {
-    await supabase
-      .from('household_members')
-      .delete()
-      .eq('household_id', oldHouseholdId)
-      .eq('user_id', user.id);
-
-    // Delete old household if now empty (cascades categories etc.)
-    await supabase.rpc('cleanup_empty_household', { hid: oldHouseholdId });
-  }
+  if (rpcErr) return { error: rpcErr.message };
+  if (data) return { error: data as string };
 
   return { error: null };
 }

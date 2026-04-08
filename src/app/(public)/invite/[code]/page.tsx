@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { AcceptInviteButton } from '@/features/settings/AcceptInviteButton';
 
@@ -11,6 +12,12 @@ interface Props {
 
 export default async function InvitePage({ params }: Props): Promise<React.ReactElement> {
   const { code } = await params;
+
+  // Clear pending invite cookie — user has arrived at the invite page
+  const cookieStore = await cookies();
+  if (cookieStore.get('pending_invite')) {
+    cookieStore.delete('pending_invite');
+  }
 
   const supabase = await createClient();
   const {

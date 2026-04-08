@@ -27,13 +27,17 @@ export function SignupForm({ next }: { next?: string }): React.ReactElement {
     setLoading(true);
     const supabase = createClient();
     const origin = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
-    const callbackUrl = next
-      ? `${origin}/auth/callback?next=${encodeURIComponent(next)}`
-      : `${origin}/auth/callback`;
+    const callbackUrl = `${origin}/auth/callback`;
+
+    // Extract invite code from next param (e.g. "/invite/ABC123") and persist it
+    // in user metadata so it survives the email confirmation redirect chain.
+    const inviteMatch = next?.match(/^\/invite\/([A-Za-z0-9]+)$/);
+    const data = inviteMatch ? { pending_invite: inviteMatch[1] } : undefined;
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: callbackUrl },
+      options: { emailRedirectTo: callbackUrl, data },
     });
     if (error) {
       toast.error(error.message);
