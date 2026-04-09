@@ -3,11 +3,18 @@ import { createClient } from '@/lib/supabase/server';
 import { getHouseholdId } from '@/lib/supabase/household';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { StatsGrid } from '@/features/dashboard/StatsGrid';
-import { SpendingByCategoryChart } from '@/features/dashboard/SpendingByCategoryChart';
-import { MonthlyTrendsChart } from '@/features/dashboard/MonthlyTrendsChart';
 import { RecentTransactions } from '@/features/dashboard/RecentTransactions';
 import { DateRangePicker } from '@/features/dashboard/DateRangePicker';
+
+const SpendingByCategoryChart = dynamic(() =>
+  import('@/features/dashboard/SpendingByCategoryChart').then((m) => m.SpendingByCategoryChart),
+);
+
+const MonthlyTrendsChart = dynamic(() =>
+  import('@/features/dashboard/MonthlyTrendsChart').then((m) => m.MonthlyTrendsChart),
+);
 import {
   fetchDashboardStats,
   fetchCategorySpend,
