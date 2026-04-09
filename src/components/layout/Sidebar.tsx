@@ -32,7 +32,13 @@ export function Sidebar(): React.ReactElement {
   return (
     <aside className="flex h-full w-60 flex-col border-r bg-card px-3 py-4">
       <div className="mb-6 px-3">
-        <span className="text-lg font-bold tracking-tight">Kalash Finance</span>
+        <span
+          className="text-lg font-bold tracking-tight"
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <img src="/kalash-logo-black.png" alt="Kalash" className="h-[7rem]" />
+          Finance
+        </span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1">

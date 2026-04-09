@@ -3,6 +3,7 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
+import { CHART_COLORS } from '@/lib/constants';
 import type { CategorySpend } from '@/types';
 
 interface SpendingByCategoryChartProps {
@@ -46,8 +47,8 @@ export function SpendingByCategoryChart({
               paddingAngle={0}
               minAngle={5}
             >
-              {data.map((entry) => (
-                <Cell key={entry.name} fill={entry.color} />
+              {data.map((entry, i) => (
+                <Cell key={entry.name} fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}
             </Pie>
             <Tooltip

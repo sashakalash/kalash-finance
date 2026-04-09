@@ -11,7 +11,8 @@ import type { Category, Transaction } from '@/types';
 
 const PAGE_SIZE = 50;
 
-const COL_CLASS = 'grid grid-cols-[88px_1fr_32px] md:grid-cols-[96px_1fr_164px_76px_116px_32px]';
+const COL_CLASS =
+  'grid grid-cols-[88px_1fr_32px] md:grid-cols-[96px_minmax(0,1fr)_164px_76px_184px_32px]';
 const CELL = 'flex items-center px-3 py-0 text-sm overflow-hidden';
 
 interface TransactionsVirtualTableProps {
@@ -29,6 +30,11 @@ export function TransactionsVirtualTable({
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setTransactions(initialTransactions);
+    setHasMore(initialHasMore);
+  }, [initialTransactions, initialHasMore]);
 
   const virtualizer = useVirtualizer({
     count: hasMore ? transactions.length + 1 : transactions.length,
@@ -68,6 +74,15 @@ export function TransactionsVirtualTable({
   function handleCategoryChange(id: string, categoryId: string | null): void {
     setTransactions((prev) =>
       prev.map((t) => (t.id === id ? { ...t, category_id: categoryId } : t)),
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border py-20 text-sm text-muted-foreground gap-2">
+        <span className="text-3xl">🗒️</span>
+        <span>No transactions yet</span>
+      </div>
     );
   }
 

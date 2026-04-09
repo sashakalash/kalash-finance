@@ -90,9 +90,29 @@ function parseDetails(details: string): {
     };
   }
 
+  // Automatic currency conversion (may appear after "Payment - ...")
+  if (/Automatic conversion/i.test(details)) {
+    return { description: 'Currency Conversion', date: null, suggestedCategory: 'Fees' };
+  }
+
+  // ATM withdrawal: "Withdrawal - Amount: GEL100.00; ATM: Bank Of Georgia, Batumi, ..."
+  const withdrawal = details.match(/^Withdrawal.*?ATM:\s*([^,]+)/i);
+  if (withdrawal) {
+    return {
+      description: `ATM: ${withdrawal[1].trim()}`,
+      date: null,
+      suggestedCategory: 'Withdrawal',
+    };
+  }
+
   // Transfer fee: "Fee - Amount: ; Transaction: Outgoing Transfer; ..."
   if (/^Fee/i.test(details)) {
     return { description: 'Transfer Fee', date: null, suggestedCategory: 'Fees' };
+  }
+
+  // Generic payment — not matched by more specific patterns above
+  if (/^Payment/i.test(details)) {
+    return { description: details.slice(0, 80).trim(), date: null, suggestedCategory: 'Transfers' };
   }
 
   return {
@@ -134,17 +154,9 @@ export const gelAdapter: BankAdapter = {
     const rowDate = parseGelDate(String(row.Date));
     const { description, date, suggestedCategory } = parseDetails(details);
 
-    // Determine currency: use non-empty foreign currency column if GEL is ~0
-    let currency = 'GEL';
-    if (row.USD && parseAmount(row.USD) !== null && parseAmount(row.USD) !== 0) {
-      currency = 'USD';
-    } else if (row.EUR && parseAmount(row.EUR) !== null && parseAmount(row.EUR) !== 0) {
-      currency = 'EUR';
-    }
-
     return {
       amount: Math.abs(amount),
-      currency,
+      currency: 'GEL',
       type: amount < 0 ? 'expense' : 'income',
       date: date ?? rowDate,
       description,
