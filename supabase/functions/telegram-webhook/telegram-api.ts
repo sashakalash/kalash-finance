@@ -1,4 +1,4 @@
-import type { TelegramFile } from './types.ts';
+import type { TelegramFile, InlineKeyboardButton } from './types.ts';
 
 const BASE = (token: string) => `https://api.telegram.org/bot${token}`;
 
@@ -8,6 +8,34 @@ export async function sendMessage(token: string, chatId: number, text: string): 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+  });
+}
+
+/** Send a message with an inline keyboard. */
+export async function sendKeyboard(
+  token: string,
+  chatId: number,
+  text: string,
+  buttons: InlineKeyboardButton[][],
+): Promise<void> {
+  await fetch(`${BASE(token)}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML',
+      reply_markup: { inline_keyboard: buttons },
+    }),
+  });
+}
+
+/** Acknowledge a callback query (removes the loading spinner). */
+export async function answerCallback(token: string, callbackId: string): Promise<void> {
+  await fetch(`${BASE(token)}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: callbackId }),
   });
 }
 

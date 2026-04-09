@@ -27,12 +27,32 @@ export interface TelegramMessage {
   photo?: TelegramPhotoSize[];
 }
 
+export interface TelegramCallbackQuery {
+  id: string;
+  from: TelegramUser;
+  message?: TelegramMessage;
+  data?: string;
+}
+
 export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
+  callback_query?: TelegramCallbackQuery;
 }
 
 export interface TelegramFile {
   file_id: string;
   file_path?: string;
+}
+
+export interface InlineKeyboardButton {
+  text: string;
+  callback_data: string;
+}
+
+export interface BotState {
+  type?: 'expense' | 'income';
+  category_id?: string;
+  category_name?: string;
+  step?: 'awaiting_amount';
 }

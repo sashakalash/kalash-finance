@@ -1,10 +1,14 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { sendMessage, getFile, downloadFile, toBase64 } from './telegram-api.ts';
+import {
+  sendMessage,
+  sendKeyboard,
+  answerCallback,
+  getFile,
+  downloadFile,
+  toBase64,
+} from './telegram-api.ts';
 import { parseReceipt } from './vision.ts';
-import type { TelegramUpdate } from './types.ts';
-
-// Quick-entry pattern: "150 coffee" or "25.5 taxi"
-const QUICK_ENTRY_RE = /^(\d+[.,]?\d*)\s+(.+)$/;
+import type { TelegramUpdate, BotState, InlineKeyboardButton } from './types.ts';
 
 // 6-char alphanumeric link code
 const LINK_CODE_RE = /^[A-Z0-9]{6}$/i;
@@ -40,37 +44,188 @@ export async function handleUpdate(
     ANTHROPIC_API_KEY: string;
   },
 ): Promise<void> {
+  const token = env.TELEGRAM_BOT_TOKEN;
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // ─── Callback query (inline button press) ─────────────────────────────────
+  if (update.callback_query) {
+    const cb = update.callback_query;
+    const chatId = cb.message?.chat.id;
+    if (!chatId) return;
+
+    await answerCallback(token, cb.id);
+
+    const { data: link } = await supabase
+      .from('telegram_links')
+      .select('user_id, household_id, bot_state')
+      .eq('telegram_chat_id', chatId)
+      .maybeSingle();
+    if (!link) return;
+
+    const data = cb.data ?? '';
+
+    // ── Type selection: expense / income ──
+    if (data === 'type:expense' || data === 'type:income') {
+      const type = data === 'type:expense' ? 'expense' : 'income';
+
+      if (type === 'expense') {
+        // Fetch categories and show as buttons
+        const { data: categories } = await supabase
+          .from('categories')
+          .select('id, name, icon')
+          .eq('household_id', link.household_id)
+          .order('name');
+
+        if (!categories || categories.length === 0) {
+          await sendMessage(
+            token,
+            chatId,
+            '❌ No categories found. Add categories in the app first.',
+          );
+          return;
+        }
+
+        // Build 2-column grid of category buttons
+        const buttons: InlineKeyboardButton[][] = [];
+        for (let i = 0; i < categories.length; i += 2) {
+          const row: InlineKeyboardButton[] = [
+            {
+              text: `${categories[i].icon ?? ''} ${categories[i].name}`,
+              callback_data: `cat:${categories[i].id}:${categories[i].name}`,
+            },
+          ];
+          if (categories[i + 1]) {
+            row.push({
+              text: `${categories[i + 1].icon ?? ''} ${categories[i + 1].name}`,
+              callback_data: `cat:${categories[i + 1].id}:${categories[i + 1].name}`,
+            });
+          }
+          buttons.push(row);
+        }
+        buttons.push([{ text: '❌ Cancel', callback_data: 'cancel' }]);
+
+        await supabase
+          .from('telegram_links')
+          .update({ bot_state: { type: 'expense' } })
+          .eq('telegram_chat_id', chatId);
+
+        await sendKeyboard(token, chatId, '📂 Choose a category:', buttons);
+        return;
+      }
+
+      // Income — skip category, go straight to amount input
+      await supabase
+        .from('telegram_links')
+        .update({ bot_state: { type: 'income', step: 'awaiting_amount' } })
+        .eq('telegram_chat_id', chatId);
+
+      await sendMessage(
+        token,
+        chatId,
+        '💰 Enter amount and description:\n<code>1500 salary</code>',
+      );
+      return;
+    }
+
+    // ── Category selection ──
+    if (data.startsWith('cat:')) {
+      const parts = data.split(':');
+      const categoryId = parts[1];
+      const categoryName = parts.slice(2).join(':');
+
+      const state: BotState = {
+        type: 'expense',
+        category_id: categoryId,
+        category_name: categoryName,
+        step: 'awaiting_amount',
+      };
+
+      await supabase
+        .from('telegram_links')
+        .update({ bot_state: state })
+        .eq('telegram_chat_id', chatId);
+
+      await sendMessage(
+        token,
+        chatId,
+        `📝 <b>${categoryName}</b>\nEnter amount and description:\n<code>150 coffee</code>`,
+      );
+      return;
+    }
+
+    // ── Cancel ──
+    if (data === 'cancel') {
+      await supabase
+        .from('telegram_links')
+        .update({ bot_state: null })
+        .eq('telegram_chat_id', chatId);
+
+      await sendMessage(token, chatId, '👌 Cancelled.');
+      return;
+    }
+
+    return;
+  }
+
+  // ─── Regular message ──────────────────────────────────────────────────────
   const msg = update.message;
   if (!msg) return;
 
   const chatId = msg.chat.id;
-  const token = env.TELEGRAM_BOT_TOKEN;
 
-  // Service-role client bypasses RLS — used only in Edge Functions
-  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-
-  // ─── Resolve user + household from chat id ───────────────────────────────
+  // ─── Resolve user + household ─────────────────────────────────────────────
   const { data: link } = await supabase
     .from('telegram_links')
-    .select('user_id, household_id')
+    .select('user_id, household_id, bot_state')
     .eq('telegram_chat_id', chatId)
     .maybeSingle();
 
   // ─── /start or /help ─────────────────────────────────────────────────────
   if (msg.text === '/start' || msg.text === '/help') {
-    await sendMessage(
-      token,
-      chatId,
-      `<b>Kalash Finance Bot</b>\n\n` +
-        `To link your account, go to <b>Settings</b> in the app and send the code shown there.\n\n` +
-        `Once linked, you can:\n` +
-        `• Send a receipt photo to log it automatically\n` +
-        `• Type <code>25 coffee</code> for quick entry`,
-    );
+    if (!link) {
+      await sendMessage(
+        token,
+        chatId,
+        `<b>Kalash Finance Bot</b>\n\nTo link your account, go to <b>Settings</b> in the app and send the code shown there.`,
+      );
+      return;
+    }
+
+    await sendKeyboard(token, chatId, '<b>Kalash Finance Bot</b>\n\nChoose transaction type:', [
+      [
+        { text: '💸 Expense', callback_data: 'type:expense' },
+        { text: '💰 Income', callback_data: 'type:income' },
+      ],
+    ]);
     return;
   }
 
-  // ─── Link code handling (not yet linked) ─────────────────────────────────
+  // ─── /new — start new entry (shortcut) ────────────────────────────────────
+  if (msg.text === '/new') {
+    if (!link) {
+      await sendMessage(
+        token,
+        chatId,
+        'Link your account first. Open the app → Settings → Link Telegram.',
+      );
+      return;
+    }
+
+    await supabase
+      .from('telegram_links')
+      .update({ bot_state: null })
+      .eq('telegram_chat_id', chatId);
+
+    await sendKeyboard(token, chatId, 'Choose transaction type:', [
+      [
+        { text: '💸 Expense', callback_data: 'type:expense' },
+        { text: '💰 Income', callback_data: 'type:income' },
+      ],
+    ]);
+    return;
+  }
+
+  // ─── Link code handling (not yet linked) ──────────────────────────────────
   if (!link) {
     if (msg.text && LINK_CODE_RE.test(msg.text.trim())) {
       const code = msg.text.trim().toUpperCase();
@@ -103,11 +258,12 @@ export async function handleUpdate(
         })
         .eq('user_id', pendingLink.user_id);
 
-      await sendMessage(
-        token,
-        chatId,
-        '✅ Account linked! Send a receipt photo or type <code>25 coffee</code>.',
-      );
+      await sendKeyboard(token, chatId, '✅ Account linked! Choose transaction type:', [
+        [
+          { text: '💸 Expense', callback_data: 'type:expense' },
+          { text: '💰 Income', callback_data: 'type:income' },
+        ],
+      ]);
       return;
     }
 
@@ -121,6 +277,7 @@ export async function handleUpdate(
 
   const userId = link.user_id;
   const householdId = link.household_id;
+  const botState = link.bot_state as BotState | null;
 
   // ─── Photo: receipt OCR ───────────────────────────────────────────────────
   if (msg.photo && msg.photo.length > 0) {
@@ -137,7 +294,6 @@ export async function handleUpdate(
       const date = receipt.date ?? today;
       const description = receipt.merchant ?? 'Receipt';
 
-      // Resolve category id from name
       let categoryId: string | null = null;
       if (receipt.category) {
         const { data: cat } = await supabase
@@ -180,55 +336,87 @@ export async function handleUpdate(
       await sendMessage(
         token,
         chatId,
-        `✅ Added: <b>${receipt.amount} ${receipt.currency}</b> — ${description}${catLabel}\n` +
-          `<i>${date}</i>`,
+        `✅ Added: <b>${receipt.amount} ${receipt.currency}</b> — ${description}${catLabel}\n<i>${date}</i>`,
       );
     } catch (err) {
       const msg2 = err instanceof Error ? err.message : 'Unknown error';
       await sendMessage(token, chatId, `❌ Could not read receipt: ${msg2}`);
     }
+
+    // Clear state after receipt
+    await supabase
+      .from('telegram_links')
+      .update({ bot_state: null })
+      .eq('telegram_chat_id', chatId);
     return;
   }
 
-  // ─── Text: quick entry "150 coffee" ──────────────────────────────────────
-  if (msg.text) {
-    const match = QUICK_ENTRY_RE.exec(msg.text.trim());
-    if (match) {
-      const amount = parseFloat(match[1].replace(',', '.'));
-      const description = match[2].trim();
-      const date = new Date().toISOString().split('T')[0];
-
-      const hash = await hashTransaction(householdId, date, amount, 'GEL', description);
-
-      const { error } = await supabase.from('transactions').insert({
-        household_id: householdId,
-        user_id: userId,
-        amount,
-        currency: 'GEL',
-        type: 'expense',
-        date,
-        description,
-        source: 'telegram',
-        hash,
-      });
-
-      if (error?.code === '23505') {
-        await sendMessage(token, chatId, '⚠️ Already added today.');
-        return;
-      }
-      if (error) {
-        await sendMessage(token, chatId, `❌ Error: ${error.message}`);
-        return;
-      }
-
-      await sendMessage(token, chatId, `✅ Added: <b>${amount} GEL</b> — ${description}`);
+  // ─── Text: awaiting amount entry ──────────────────────────────────────────
+  if (msg.text && botState?.step === 'awaiting_amount') {
+    const match = /^(\d+[.,]?\d*)\s*(.*)$/.exec(msg.text.trim());
+    if (!match) {
+      await sendMessage(
+        token,
+        chatId,
+        '❌ Invalid format. Enter: <code>amount description</code>\nExample: <code>150 coffee</code>',
+      );
       return;
     }
 
+    const amount = parseFloat(match[1].replace(',', '.'));
+    const description = match[2].trim() || (botState.type === 'income' ? 'Income' : 'Expense');
+    const type = botState.type ?? 'expense';
+    const categoryId = botState.category_id ?? null;
+    const categoryName = botState.category_name ?? null;
+    const date = new Date().toISOString().split('T')[0];
+
+    const hash = await hashTransaction(householdId, date, amount, 'GEL', description);
+
+    const { error } = await supabase.from('transactions').insert({
+      household_id: householdId,
+      user_id: userId,
+      amount,
+      currency: 'GEL',
+      type,
+      date,
+      description,
+      category_id: categoryId,
+      source: 'telegram',
+      hash,
+    });
+
+    // Clear state
+    await supabase
+      .from('telegram_links')
+      .update({ bot_state: null })
+      .eq('telegram_chat_id', chatId);
+
+    if (error?.code === '23505') {
+      await sendMessage(token, chatId, '⚠️ Already added today.');
+      return;
+    }
+    if (error) {
+      await sendMessage(token, chatId, `❌ Error: ${error.message}`);
+      return;
+    }
+
+    const icon = type === 'income' ? '📥' : '✅';
+    const catLabel = categoryName ? ` · ${categoryName}` : '';
     await sendMessage(
       token,
       chatId,
-      'Send a receipt photo, or type: <code>amount description</code>\nExample: <code>25 coffee</code>',
+      `${icon} <b>${amount} GEL</b> — ${description}${catLabel}\n\nUse /new for another entry.`,
     );
+    return;
+  }
+
+  // ─── Text: no active state — show main menu ──────────────────────────────
+  if (msg.text) {
+    await sendKeyboard(token, chatId, 'Choose transaction type:', [
+      [
+        { text: '💸 Expense', callback_data: 'type:expense' },
+        { text: '💰 Income', callback_data: 'type:income' },
+      ],
+    ]);
   }
 }
