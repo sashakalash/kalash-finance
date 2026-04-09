@@ -17,11 +17,11 @@ export function formatCurrency(amount: number, currency = 'GEL'): string {
 
 /** Format ISO date string to "Jan 31, 2026" */
 export function formatDate(dateStr: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(dateStr));
+  const d = new Date(dateStr);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}.${month}.${year}`;
 }
 
 /** Format ISO date string to "Jan 2026" for chart axes */
