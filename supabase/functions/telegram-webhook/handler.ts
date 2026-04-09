@@ -85,19 +85,33 @@ export async function handleUpdate(
           return;
         }
 
-        // Build 2-column grid of category buttons
+        // Build 2-column grid of category buttons (exclude system categories)
+        const filtered = categories.filter(
+          (c: { id: string; name: string; icon: string | null }) =>
+            c.name !== 'Withdrawal' && c.name !== 'Income',
+        );
+
+        if (filtered.length === 0) {
+          await sendMessage(
+            token,
+            chatId,
+            '❌ No expense categories found. Add categories in the app first.',
+          );
+          return;
+        }
+
         const buttons: InlineKeyboardButton[][] = [];
-        for (let i = 0; i < categories.length; i += 2) {
+        for (let i = 0; i < filtered.length; i += 2) {
           const row: InlineKeyboardButton[] = [
             {
-              text: `${categories[i].icon ?? ''} ${categories[i].name}`,
-              callback_data: `cat:${categories[i].id}:${categories[i].name}`,
+              text: `${filtered[i].icon ?? ''} ${filtered[i].name}`,
+              callback_data: `cat:${filtered[i].id}:${filtered[i].name}`,
             },
           ];
-          if (categories[i + 1]) {
+          if (filtered[i + 1]) {
             row.push({
-              text: `${categories[i + 1].icon ?? ''} ${categories[i + 1].name}`,
-              callback_data: `cat:${categories[i + 1].id}:${categories[i + 1].name}`,
+              text: `${filtered[i + 1].icon ?? ''} ${filtered[i + 1].name}`,
+              callback_data: `cat:${filtered[i + 1].id}:${filtered[i + 1].name}`,
             });
           }
           buttons.push(row);
