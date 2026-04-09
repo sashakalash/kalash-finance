@@ -12,7 +12,7 @@ import type { Category, Transaction } from '@/types';
 const PAGE_SIZE = 50;
 
 const COL_CLASS =
-  'grid grid-cols-[88px_1fr_32px] md:grid-cols-[96px_minmax(0,1fr)_164px_76px_184px_32px]';
+  'grid grid-cols-[88px_1fr_32px] md:grid-cols-[96px_minmax(0,1fr)_188px_76px_184px_32px]';
 const CELL = 'flex items-center px-3 py-0 text-sm overflow-hidden';
 
 interface TransactionsVirtualTableProps {
@@ -97,7 +97,9 @@ export function TransactionsVirtualTable({
         <div className="hidden md:flex items-center px-3 py-0 text-sm overflow-hidden">
           Category
         </div>
-        <div className="hidden md:flex items-center px-3 py-0 text-sm overflow-hidden">Source</div>
+        <div className="hidden md:flex items-center justify-center px-3 py-0 text-sm overflow-hidden">
+          Source
+        </div>
         <div className="hidden md:flex items-center justify-end px-3 py-0 text-sm overflow-hidden">
           Amount
         </div>
@@ -172,7 +174,7 @@ export function TransactionsVirtualTable({
                 </div>
 
                 {/* Source (desktop) */}
-                <div className="hidden md:flex items-center px-3 overflow-hidden">
+                <div className="hidden md:flex items-center justify-center px-3 overflow-hidden">
                   <Badge variant="outline" className="text-xs capitalize">
                     {tx.source}
                   </Badge>
