@@ -41,14 +41,14 @@ export default async function ProtectedLayout({
   return (
     <>
       <TopLoader />
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden pt-[env(safe-area-inset-top)] md:pt-0">
         {/* Desktop sidebar */}
         <div className="hidden md:flex">
           <Sidebar />
         </div>
 
         {/* Main content */}
-        <main className="flex flex-1 flex-col overflow-y-auto pb-16 md:pb-0">
+        <main className="flex flex-1 flex-col overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           <div className="flex-1 p-4 md:p-6">{children}</div>
         </main>
 

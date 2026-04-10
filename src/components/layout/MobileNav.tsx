@@ -29,7 +29,7 @@ export function MobileNav(): React.ReactElement {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t bg-card md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
       {NAV_ITEMS.map(({ href, label, icon }) => {
         const NavIcon = icon;
         return (
