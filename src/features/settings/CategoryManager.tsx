@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { createCategory, deleteCategory } from './actions';
 import type { Category } from '@/types';
 
@@ -18,19 +17,40 @@ const PRESET_COLORS = [
   '#ef4444',
   '#f59e0b',
   '#8b5cf6',
-  '#ec4899',
+  '#f5a4cc',
   '#06b6d4',
   '#10b981',
-  '#22c55e',
+  '#2f7345',
   '#f97316',
   '#3b82f6',
   '#6b7280',
+  '#d726da',
+  '#ccbbe8',
+  '#0891b2',
+  '#d97706',
+  '#14b8a6',
+  '#0284c7',
+  '#8ddf49',
+  '#be185d',
+  '#f0e50c',
+  '#9bbcbb',
 ];
+
+function randomHexColor(): string {
+  return `#${Math.floor(Math.random() * 0xffffff)
+    .toString(16)
+    .padStart(6, '0')}`;
+}
+
+function nextAvailableColor(categories: Category[]): string {
+  const used = new Set(categories.map((c) => c.color?.toLowerCase()));
+  return PRESET_COLORS.find((c) => !used.has(c.toLowerCase())) ?? randomHexColor();
+}
 
 export function CategoryManager({ categories }: CategoryManagerProps): React.ReactElement {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('📦');
-  const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [color, setColor] = useState(() => nextAvailableColor(categories));
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -78,22 +98,15 @@ export function CategoryManager({ categories }: CategoryManagerProps): React.Rea
               <span className="text-sm font-medium" style={{ color: cat.color ?? undefined }}>
                 {cat.name}
               </span>
-              {!cat.is_default && (
-                <button
-                  type="button"
-                  aria-label={`Delete ${cat.name}`}
-                  onClick={() => handleDelete(cat.id, cat.name)}
-                  disabled={deletingId === cat.id}
-                  className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 size={11} />
-                </button>
-              )}
-              {cat.is_default && (
-                <Badge variant="outline" className="ml-0.5 h-4 px-1 text-[10px]">
-                  default
-                </Badge>
-              )}
+              <button
+                type="button"
+                aria-label={`Delete ${cat.name}`}
+                onClick={() => handleDelete(cat.id, cat.name)}
+                disabled={deletingId === cat.id}
+                className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 size={11} />
+              </button>
             </div>
           ))}
         </div>

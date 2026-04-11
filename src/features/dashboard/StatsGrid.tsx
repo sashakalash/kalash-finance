@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Activity, Hash } from 'lucide-react';
+import { TrendingDown, TrendingUp, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import type { DashboardStats } from '@/types';
@@ -28,16 +28,10 @@ export function StatsGrid({ stats }: StatsGridProps): React.ReactElement {
       icon: Activity,
       color: 'text-blue-500',
     },
-    {
-      label: 'Expense txns',
-      value: String(stats.transactionCount),
-      icon: Hash,
-      color: 'text-purple-500',
-    },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {items.map(({ label, value, icon, color }) => {
         const StatIcon = icon;
         return (

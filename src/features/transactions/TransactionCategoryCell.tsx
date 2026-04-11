@@ -55,7 +55,7 @@ export function TransactionCategoryCell({
     <div className="flex items-center gap-1">
       <Select value={selectValue} onValueChange={handleChange} disabled={saving}>
         <SelectTrigger
-          className="h-7 w-36 text-xs"
+          className="!h-5 w-full py-0 px-1 text-[10px] md:!h-6 md:w-32 md:py-0 md:px-1 md:text-[11px] lg:!h-7 lg:w-36 lg:py-1 lg:px-2 lg:text-xs"
           style={{
             color: selectedCat?.color ?? undefined,
             borderColor: selectedCat?.color ?? undefined,

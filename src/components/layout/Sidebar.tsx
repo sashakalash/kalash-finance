@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-// nav
-import { BarChart3, CreditCard, Upload, Settings, LogOut } from 'lucide-react';
+import { BarChart3, CreditCard, Upload, Settings, LogOut, PanelLeftClose } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -15,7 +14,11 @@ const NAV_ITEMS = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar(): React.ReactElement {
+interface SidebarProps {
+  onToggle?: () => void;
+}
+
+export function Sidebar({ onToggle }: SidebarProps): React.ReactElement {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -62,13 +65,25 @@ export function Sidebar(): React.ReactElement {
         })}
       </nav>
 
-      <button
-        onClick={handleSignOut}
-        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-      >
-        <LogOut size={16} />
-        Sign out
-      </button>
+      <div className="flex flex-col gap-1">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <LogOut size={16} />
+          Sign out
+        </button>
+
+        {onToggle && (
+          <button
+            onClick={onToggle}
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <PanelLeftClose size={16} />
+            Hide
+          </button>
+        )}
+      </div>
     </aside>
   );
 }

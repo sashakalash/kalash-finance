@@ -8,7 +8,7 @@ import type { Category, Transaction } from '@/types';
 
 export const metadata: Metadata = { title: 'Transactions — Kalash Finance' };
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
 
 export default async function TransactionsPage(): Promise<React.ReactElement> {
   const supabase = await createClient();
@@ -34,7 +34,7 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
   const categories = (catData ?? []) as Category[];
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transactions</h1>
         <AddTransactionDialog categories={categories} />

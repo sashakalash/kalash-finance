@@ -58,7 +58,12 @@ export async function createCategory(input: CreateCategoryInput): Promise<void> 
 export async function deleteCategory(id: string): Promise<void> {
   const { supabase, user } = await requireUser();
   const householdId = await getHouseholdId(supabase, user.id);
-  await supabase.from('categories').delete().eq('id', id).eq('household_id', householdId);
+  const { error } = await supabase
+    .from('categories')
+    .delete()
+    .eq('id', id)
+    .eq('household_id', householdId);
+  if (error) throw new Error(error.message);
   revalidatePath('/(protected)/settings');
 }
 
