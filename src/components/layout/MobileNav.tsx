@@ -38,19 +38,20 @@ export function MobileNav(): React.ReactElement {
   return (
     <>
       {/* Drawer overlay */}
-      {drawerOpen && (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          className="fixed inset-0 z-50 w-full cursor-default bg-black/40 lg:hidden"
-          onClick={() => setDrawerOpen(false)}
-        />
-      )}
+      <button
+        type="button"
+        aria-label="Close navigation"
+        className={cn(
+          'fixed inset-0 z-50 w-full cursor-default bg-black/40 transition-opacity duration-300 ease-in-out lg:hidden',
+          drawerOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+        )}
+        onClick={() => setDrawerOpen(false)}
+      />
 
       {/* Drawer sidebar */}
       <aside
         className={cn(
-          'relative fixed top-0 left-0 z-50 flex h-full w-64 flex-col border-r bg-card px-3 py-4 transition-transform duration-200 lg:hidden',
+          'relative fixed top-0 left-0 z-50 flex h-full w-64 flex-col border-r bg-card px-3 py-4 transition-transform duration-300 ease-in-out lg:hidden',
           drawerOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
