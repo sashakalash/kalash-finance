@@ -47,7 +47,7 @@ export default async function DashboardPage({
 
   const householdId = await getHouseholdId(supabase, user.id);
   const params = await searchParams;
-  const defaults = lastNMonthsRange(3);
+  const defaults = lastNMonthsRange(1);
   const from = isValidDate(params.from ?? '') ? (params.from as string) : defaults.from;
   const to = isValidDate(params.to ?? '') ? (params.to as string) : defaults.to;
 
