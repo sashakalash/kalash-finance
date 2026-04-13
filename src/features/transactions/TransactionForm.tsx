@@ -36,7 +36,7 @@ export function TransactionForm({
     currency: transaction?.currency ?? 'GEL',
   });
 
-  function set(field: string, value: string): void {
+  function set<K extends keyof typeof form>(field: K, value: (typeof form)[K]): void {
     setForm((f) => ({ ...f, [field]: value }));
   }
 

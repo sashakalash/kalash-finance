@@ -48,7 +48,6 @@ export async function fetchDashboardStats(
   };
 }
 
-/** Spending grouped by category for the pie chart. */
 export async function fetchCategorySpend(
   supabase: SupabaseClient,
   householdId: string,

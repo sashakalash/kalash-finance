@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import type { DashboardStats } from '@/types';
 
-interface StatsGridProps {
+export interface StatsGridProps {
   stats: DashboardStats;
-  topCategory: string | null;
 }
 
 export function StatsGrid({ stats }: StatsGridProps): React.ReactElement {

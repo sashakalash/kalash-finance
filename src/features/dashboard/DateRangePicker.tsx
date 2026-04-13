@@ -3,12 +3,12 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback } from 'react';
 
-interface DateRangePickerProps {
+export interface DateRangeProps {
   from: string;
   to: string;
 }
 
-export function DateRangePicker({ from, to }: DateRangePickerProps): React.ReactElement {
+export function DateRangePicker({ from, to }: DateRangeProps): React.ReactElement {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

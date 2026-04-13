@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import type { CategorySpend } from '@/types';
 
-interface SpendingByCategoryChartProps {
+export interface SpendingByCategoryChartProps {
   data: CategorySpend[];
   currency?: string;
 }

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { Transaction } from '@/types';
 
-interface RecentTransactionsProps {
+export interface RecentTransactionsProps {
   transactions: Transaction[];
 }
 

@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import type { MonthlyTrend } from '@/types';
 
-interface MonthlyTrendsChartProps {
+export interface MonthlyTrendsChartProps {
   data: MonthlyTrend[];
   currency?: string;
 }
