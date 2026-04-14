@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/supabase/auth';
 import { getHouseholdId } from '@/lib/supabase/household';
-import { generateHash } from '@/services/xlsx/dedup';
+import { generateHash } from '@/features/csv-import/services/xlsx/dedup';
 import {
   CreateTransactionSchema,
   UpdateTransactionSchema,
