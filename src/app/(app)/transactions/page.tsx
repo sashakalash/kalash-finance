@@ -22,7 +22,7 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
   const [{ data: txData }, { data: catData }] = await Promise.all([
     supabase
       .from('transactions')
-      .select('*, categories(id, name, color, icon)')
+      .select('*, category:categories(id, name, color, icon)')
       .eq('household_id', householdId)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
@@ -34,7 +34,7 @@ export default async function TransactionsPage(): Promise<React.ReactElement> {
   const categories = (catData ?? []) as Category[];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden max-w-full">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transactions</h1>
         <AddTransactionDialog categories={categories} />

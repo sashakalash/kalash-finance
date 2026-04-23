@@ -79,19 +79,31 @@ export async function deleteTransaction(id: string): Promise<void> {
   revalidatePath('/transactions');
 }
 
-/** Fetch a page of transactions for the current household (newest first). */
-export async function fetchTransactionsPage(offset: number, limit = 50): Promise<Transaction[]> {
+/** Fetch a page of transactions for the current household (newest first).
+ *  Pass categoryId = 'uncategorized' to get transactions without a category. */
+export async function fetchTransactionsPage(
+  offset: number,
+  limit = 50,
+  categoryId?: string | null,
+): Promise<Transaction[]> {
   const { supabase, user } = await requireUser();
   const householdId = await getHouseholdId(supabase, user.id);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('transactions')
-    .select('*, categories(id, name, color, icon)')
+    .select('*, category:categories(id, name, color, icon)')
     .eq('household_id', householdId)
     .order('date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
+  if (categoryId === 'uncategorized') {
+    query = query.is('category_id', null);
+  } else if (categoryId) {
+    query = query.eq('category_id', categoryId);
+  }
+
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as Transaction[];
 }
